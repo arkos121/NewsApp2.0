@@ -43,10 +43,11 @@ class MainActivity : AppCompatActivity() {
 
     private class WebAppInterface(private val context: Context) {
         @JavascriptInterface
-        fun onPathClicked(pathId: String) {
+        fun onPathClicked(pathId: String,state : String) {
             // Handle the clicked path's ID
             // Example: Show a Toast message or log the ID
             println("Clicked Path ID: $pathId")
+            Toast.makeText(context, "Clicked State is $state", Toast.LENGTH_SHORT).show()
         }
     }
 
