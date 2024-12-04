@@ -23,7 +23,10 @@ data class WeatherResponse(
         val humidity: Int
     ) {
         // Utility method to convert Kelvin to Celsius
-        fun tempInCelsius(): Double = temp - 273.15
+        fun tempInCelsius(): Double {
+            var z = temp - 273
+            return String.format("%.2f", z).toDouble()
+        }
     }
 
     data class WindData(
