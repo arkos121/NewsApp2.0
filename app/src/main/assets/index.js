@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Get the ID of the clicked path
       const pathId = event.target.id;
       event.target.style.fill = "red"
+       event.target.style.stroke = "black";  // Set stroke (border) to black
+               event.target.style.strokeWidth = "1";  //
       console.log(`Clicked path with ID: ${pathId}`);
 
       // Use the pathId to find the corresponding circle element

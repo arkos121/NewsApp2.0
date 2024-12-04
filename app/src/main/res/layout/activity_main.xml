@@ -9,8 +9,8 @@
     <!-- WebView to display the SVG content -->
     <WebView
         android:id="@+id/webView"
-        android:layout_width="417dp"
-        android:layout_height="480dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
