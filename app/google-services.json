@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "191252929827",
+    "project_id": "weathetr-96a05",
+    "storage_bucket": "weathetr-96a05.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:191252929827:android:dab6bb4b227eefa6ec4096",
+        "android_client_info": {
+          "package_name": "com.example.newp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "191252929827-l3st49c1vds4dqglmdmv5eu195htfuir.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.newp",
+            "certificate_hash": "46485ec78a475a2e8ea90d99e102cd037d9e685a"
+          }
+        },
+        {
+          "client_id": "191252929827-e685kpfjfoto75ogin80u1k1bp8eq7e3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYEXhfQ6RsxO1WjtHHgHGfhrEXVZKTrkI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "191252929827-e685kpfjfoto75ogin80u1k1bp8eq7e3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -22,10 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
          Android.onPathClicked(pathId,className)
       }
 
-      // Optional: You can also modify the circle, like changing the fill color
-//      if (circle) {
-//        circle.style.fill = "red";
-//      }
 
     });
   });
