@@ -2,14 +2,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // Query all path elements
   const paths = document.querySelectorAll("path");
 
+  // Variable to track the previously clicked path
+  let previouslyClickedPath = null;
+
   // Iterate over each path element
   paths.forEach((path) => {
     path.addEventListener("click", (event) => {
+      // Reset the style of the previously clicked path (if any)
+      if (previouslyClickedPath) {
+        previouslyClickedPath.style.fill = ""; // Reset fill
+        previouslyClickedPath.style.stroke = ""; // Reset stroke
+        previouslyClickedPath.style.strokeWidth = ""; // Reset stroke width
+      }
+
       // Get the ID of the clicked path
       const pathId = event.target.id;
-      event.target.style.fill = "red"
-       event.target.style.stroke = "black";  // Set stroke (border) to black
-               event.target.style.strokeWidth = "1";  //
+      event.target.style.fill = "red";
+      event.target.style.stroke = "black"; // Set stroke (border) to black
+      event.target.style.strokeWidth = "1"; // Set stroke width
       console.log(`Clicked path with ID: ${pathId}`);
 
       // Use the pathId to find the corresponding circle element
@@ -19,10 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (circle) {
         const className = circle.getAttribute("class");
         console.log(`Circle corresponding to path ID: ${pathId} has class: ${className}`);
-         Android.onPathClicked(pathId,className)
+        Android.onPathClicked(pathId, className);
       }
 
-
+      // Update the previously clicked path
+      previouslyClickedPath = event.target;
     });
   });
 });
