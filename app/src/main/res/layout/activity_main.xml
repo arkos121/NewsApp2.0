@@ -7,13 +7,25 @@
     android:orientation="vertical">
 
     <!-- WebView to display the SVG content -->
+
     <WebView
         android:id="@+id/webView"
+        android:layout_width="409dp"
+        android:layout_height="643dp"
+        app:layout_constraintBottom_toTopOf="@+id/recyclelayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclelayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:scrollbars="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.374" />
+        tools:itemCount="4" />
 </androidx.constraintlayout.widget.ConstraintLayout>

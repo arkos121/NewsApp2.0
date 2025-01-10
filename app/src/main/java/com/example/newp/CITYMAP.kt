@@ -1,6 +1,6 @@
 package com.example.newp
 
-val indiaStatesAndCapitals = listOf(
+val indiaStatesAndCapitals = mapOf(
     "Andhra Pradesh" to "Amaravati",
     "Arunachal Pradesh" to "Itanagar",
     "Assam" to "Dispur",
@@ -32,6 +32,6 @@ val indiaStatesAndCapitals = listOf(
 )
 
 fun getCapital(state : String) : String{
-    val capital = indiaStatesAndCapitals.find { it.first == state }
-    return capital?.second!!
+    val capital:String = indiaStatesAndCapitals[state]?:"No city Found"
+    return capital
 }
