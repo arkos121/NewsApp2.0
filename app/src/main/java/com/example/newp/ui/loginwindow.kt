@@ -1,6 +1,7 @@
 package com.example.newp
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils.substring
@@ -98,6 +99,7 @@ class LoginFragment : Fragment() {
                 }
                 else {
                     println("Login failed")
+                    showDialog("Login Failed", "Email or password is incorrect")
                     Toast.makeText(requireContext(), "Login failed", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -147,8 +149,15 @@ class LoginFragment : Fragment() {
         }
     }
 
-
-
+    private fun showDialog(title : String, message : String){
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle(title)
+        builder.setMessage(message)
+        builder.setPositiveButton("OK") { dialog, _ ->
+            dialog.dismiss()
+        }
+       builder.create().show()
+    }
     private fun updateUI(user: FirebaseUser?) {
         if (user != null) {
             val intent = Intent(requireContext(), MainActivity::class.java)
