@@ -66,8 +66,6 @@ class LoginFragment : Fragment() {
             val passwordText = password.text.toString()
             registerUser(emailText, passwordText)
         }
-
-
         return binding
     }
 
@@ -87,6 +85,10 @@ class LoginFragment : Fragment() {
         }
 
     private fun loginUser(email : String , password : String){
+        if(email.isEmpty() || password.isEmpty()){
+            showDialog("Login Failed", "Email or password cannot be empty")
+            return@loginUser
+        }
         firebaseAuth.signInWithEmailAndPassword(email,password)
             .addOnCompleteListener { task ->
                 if(task.isSuccessful){
@@ -106,6 +108,10 @@ class LoginFragment : Fragment() {
     }
 
     fun registerUser(email: String, password: String) {
+        if(email.isEmpty() || password.isEmpty()){
+            showDialog("Sign-Up Failed", "Email or password cannot be empty")
+            return@registerUser
+        }
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -114,6 +120,10 @@ class LoginFragment : Fragment() {
                     Toast.makeText(requireContext(),"Registration successful", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(requireContext(),"Registration failed ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    if(task.exception?.message == "Registration Failed The email address is already in use by another account."){
+                        showDialog("Registration Failed", "The email address is already in use by another account.")
+
+                    }
                     println("Error: ${task.exception?.message}")
                 }
             }
