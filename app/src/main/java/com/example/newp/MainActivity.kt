@@ -1,11 +1,13 @@
 package com.example.newp
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +15,7 @@ import com.example.newp.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
 
 
 class MainActivity : AppCompatActivity() {
@@ -20,11 +23,13 @@ class MainActivity : AppCompatActivity() {
     private val weatherService = RetrofitClient.apiService
     private lateinit var adapter: MyAdapter
     private val items: MutableList<CardItem> = mutableListOf()
-
+    lateinit var logout: Button
+    private lateinit var auth: FirebaseAuth
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        auth = FirebaseAuth.getInstance()
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
@@ -33,10 +38,17 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         recyclerView.adapter = adapter
-
+        logout = binding.logouts
         Log.d("MainActivity", "onCreate: Activity started")  // Log onCreate
         click()
+        logout.setOnClickListener {
+            auth.signOut()
+            val intent = Intent(this, SplashScreen::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+        }
     }
+
 
     fun additemsto(weatherData: WeatherResponse) {
         Log.d("MainActivity", "additemsto: Updating RecyclerView with weather data temp:${weatherData.main.tempInCelsius()}°C")
@@ -48,15 +60,7 @@ class MainActivity : AppCompatActivity() {
         )
         Log.d("TAG", "additemsto: ${list.size}")
         list.add(CardItem("Temperature", "${weatherData.main.tempInCelsius()}°C"))
-
-//            CardItem("Humidity", "${weatherData.main.humidity}%"),
-//            CardItem("Wind Speed", "${weatherData.wind.speed} m/s"),
-//            CardItem("Description", weatherData.weather[0].description))
         Log.d("MainActivity", "additemsto: Items added: $list")
-
-        // Notify the adapter of data changes
-//        adapter.updateData(list)
-//        adapter.notifyDataSetChanged()
     }
 
 
@@ -156,6 +160,8 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(context, "Clicked State is $state", Toast.LENGTH_SHORT).show()
         }
     }
+
+
 
     // Remove JavaScript interface when the activity is destroyed
     override fun onDestroy() {

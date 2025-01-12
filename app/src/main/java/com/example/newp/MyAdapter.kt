@@ -44,8 +44,7 @@ class MyAdapter(private var items: MutableList<CardItem>) :
             items.add(CardItem("Temperature", "${item.main.tempInCelsius()}°C"))
             items.add(CardItem("Humidity", "${item.main.humidity}%"))
             items.add(CardItem("Wind Speed", "${item.wind.speed} m/s"))
-            items.add(CardItem("SOMETHING","${item.weather[0].description}"))
-
+            notifyDataSetChanged()
         }
     }
 

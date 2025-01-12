@@ -18,23 +18,23 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.658" />
 
-    <TextView
+    <EditText
         android:id="@+id/Email"
         android:layout_width="159dp"
         android:layout_height="42dp"
         android:layout_marginTop="132dp"
-        android:text="Email id"
+        android:hint="Email id"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.48"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
+    <EditText
         android:id="@+id/Passcode"
         android:layout_width="163dp"
         android:layout_height="42dp"
-        android:text="Password"
+        android:hint="Password"
         android:textAlignment="center"
         app:layout_constraintBottom_toTopOf="@+id/btn_google_sign_in"
         app:layout_constraintEnd_toEndOf="parent"
@@ -44,18 +44,18 @@
         app:layout_constraintVertical_bias="0.155" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/signins"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="76dp"
         android:text="@string/common_signin_button_text"
         app:layout_constraintBottom_toTopOf="@+id/btn_google_sign_in"
-        app:layout_constraintEnd_toStartOf="@+id/button2"
+        app:layout_constraintEnd_toStartOf="@+id/signups2"
         app:layout_constraintHorizontal_bias="0.477"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/signups2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="64dp"

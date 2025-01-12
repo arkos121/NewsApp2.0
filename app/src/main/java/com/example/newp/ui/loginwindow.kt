@@ -3,12 +3,14 @@ package com.example.newp
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils.substring
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
@@ -34,23 +36,36 @@ class LoginFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val binding = inflater.inflate(R.layout.fragment_login, container, false)
-
+        val email = binding.findViewById<TextView>(R.id.Email)
+        val password = binding.findViewById<TextView>(R.id.Passcode)
         // Initialize Firebase Auth
         firebaseAuth = FirebaseAuth.getInstance()
-
         // Configure Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.web_client_id)) // Ensure this matches your web client ID
             .requestEmail()
             .build()
-
         googleSignInClient = GoogleSignIn.getClient(requireContext(), gso)
-
         // Setup the sign-in button
         val signInButton = binding.findViewById<SignInButton>(R.id.btn_google_sign_in)
         signInButton.setOnClickListener {
             signInWithGoogle()
         }
+
+        val loginButton = binding.findViewById<Button>(R.id.signins)
+        loginButton.setOnClickListener {
+            val emailText = email.text.toString()
+            val passwordText = password.text.toString()
+            loginUser(emailText, passwordText)
+        }
+
+        val registerButton = binding.findViewById<Button>(R.id.signups2)
+        registerButton.setOnClickListener{
+            val emailText = email.text.toString()
+            val passwordText = password.text.toString()
+            registerUser(emailText, passwordText)
+        }
+
 
         return binding
     }
@@ -70,6 +85,38 @@ class LoginFragment : Fragment() {
             }
         }
 
+    private fun loginUser(email : String , password : String){
+        firebaseAuth.signInWithEmailAndPassword(email,password)
+            .addOnCompleteListener { task ->
+                if(task.isSuccessful){
+                    val user = firebaseAuth.currentUser
+                    Toast.makeText(requireContext(), "Welcome,"+email.substring(0,email.indexOf("@")), Toast.LENGTH_SHORT).show()
+                    println("Login is successful for ${user?.displayName}")
+                    if(user != null) {
+                        updateUI(user)
+                    }
+                }
+                else {
+                    println("Login failed")
+                    Toast.makeText(requireContext(), "Login failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
+
+    fun registerUser(email: String, password: String) {
+        firebaseAuth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = firebaseAuth.currentUser
+                    println("Registration successful: ${user?.email}")
+                    Toast.makeText(requireContext(),"Registration successful", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(requireContext(),"Registration failed ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    println("Error: ${task.exception?.message}")
+                }
+            }
+    }
+
     private fun handleResult(task: Task<GoogleSignInAccount>) {
         try {
             val account = task.getResult(ApiException::class.java)
@@ -87,6 +134,7 @@ class LoginFragment : Fragment() {
                 .addOnCompleteListener(requireActivity()) { task ->
                     if (task.isSuccessful) {
                         val user = firebaseAuth.currentUser
+                        Toast.makeText(requireContext(),"Welcome, ${user?.displayName}", Toast.LENGTH_SHORT).show()
                         updateUI(user)
                     } else {
                         Log.e("AuthError", "Authentication failed: ${task.exception?.message}")
@@ -99,9 +147,10 @@ class LoginFragment : Fragment() {
         }
     }
 
+
+
     private fun updateUI(user: FirebaseUser?) {
         if (user != null) {
-            Toast.makeText(requireContext(), "Welcome, ${user.displayName}", Toast.LENGTH_SHORT).show()
             val intent = Intent(requireContext(), MainActivity::class.java)
             startActivity(intent)
             requireActivity().finish()
