@@ -28,7 +28,6 @@ data class WeatherResponse(
             return String.format("%.2f", z).toDouble()
         }
     }
-
     data class WindData(
         val speed: Double,
         val deg: Int

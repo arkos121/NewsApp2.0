@@ -1,9 +1,11 @@
 package com.example.newp
 
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -15,6 +17,8 @@ import com.example.newp.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
 import com.google.firebase.auth.FirebaseAuth
 
 
@@ -41,6 +45,9 @@ class MainActivity : AppCompatActivity() {
         logout = binding.logouts
         Log.d("MainActivity", "onCreate: Activity started")  // Log onCreate
         click()
+        binding.checks.setOnClickListener {
+            fetchDelhiNews()
+        }
         logout.setOnClickListener {
             auth.signOut()
             val intent = Intent(this, SplashScreen::class.java)
@@ -139,6 +146,33 @@ class MainActivity : AppCompatActivity() {
 //        Log.d("MainActivity", "showWeatherData: Showing weather data - Temp: {${weatherData.main.tempInCelsius()}}")  // Log weather data
 //        Toast.makeText(this, "Temperature is ${weatherData.main.tempInCelsius()}°C for ${getCapital(stateUpdateCallBack)}", Toast.LENGTH_LONG).show()
 //    }
+
+     fun fetchDelhiNews() {
+        // Initialize Chaquopy (only once)
+        if (!Python.isStarted()) {
+            Python.start(AndroidPlatform(this))
+        }
+
+        // Get the Python instance
+        val python = Python.getInstance()
+
+        // Get the Python module (the script file without '.py' extension)
+        val pyObj = python.getModule("import_req")  // Reference the Python script (without '.py')
+
+        // Call the 'scrape_delhi_news' function from the Python script
+        val result = pyObj.callAttr("scrape_delhi_news") // Call the function
+
+        // Check if the result is not empty and handle it
+         if (result != null) {
+             // Iterate through the Python list directly (no conversion to List<String>)
+             for (i in 0 until result.asList().size) {
+                 Log.d("DelhiNews", result.asList()[i].toString()) // Log the news item
+             }
+        } else {
+            Log.d("DelhiNews", "No news found or error occurred.")
+        }
+
+}
 
 
     // WebAppInterface to handle JS interface calls

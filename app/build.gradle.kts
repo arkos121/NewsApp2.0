@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("com.chaquo.python")
 }
 
 android {
@@ -18,6 +19,10 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        ndk {
+            // On Apple silicon, you can omit x86_64.
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -37,6 +42,28 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+    ndkVersion = "27.0.12077973"
+
+    flavorDimensions += "pyVersion"
+    productFlavors {
+        create("py38") { dimension = "pyVersion" }
+        create("py310") { dimension = "pyVersion" }
+        create("py311") { dimension = "pyVersion" }
+    }
+}
+
+chaquopy {
+    productFlavors {
+        getByName("py38"){version = "3.8"}
+        getByName("py310") { version = "3.10" }
+        getByName("py311") { version = "3.11" }
+    }
+    defaultConfig{
+        pip{
+            install("requests")
+            install("beautifulsoup4")
+        }
     }
 }
 
