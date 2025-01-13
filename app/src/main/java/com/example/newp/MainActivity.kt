@@ -3,6 +3,7 @@ package com.example.newp
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.GestureDetector
@@ -14,6 +15,7 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.example.newp.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
@@ -31,10 +33,11 @@ class MainActivity : AppCompatActivity() {
     private val items: MutableList<CardItem> = mutableListOf()
     lateinit var logout: Button
     private lateinit var auth: FirebaseAuth
-    private var lastclicked : String ?=""
+    var lastclicked : String ?=""
     private var newsJob : Job ?= null
     private var isNewsLoaded = false
 
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -74,6 +77,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     private fun click() {
         val webView: WebView = binding.webView
         webView.settings.javaScriptEnabled = true
@@ -98,7 +102,7 @@ class MainActivity : AppCompatActivity() {
                         withContext(Dispatchers.IO) {
                             weatherData = makeApiCall(it)
                         }
-                        adapter.updateData(weatherData)
+                        adapter.updateData(weatherData,it)
                     } catch (e: Exception) {
                         Log.e("MainActivity", "Error in API call: ${e}")
                     }
@@ -217,7 +221,7 @@ class MainActivity : AppCompatActivity() {
                 "onPathClicked: Path ID $pathId, State $state"
             )  // Log path clicked
             stateUpdateCallBack(lastClickedState)
-            Toast.makeText(context, "Clicked State is $state", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(context, "Clicked State is $state", Toast.LENGTH_SHORT).show()
         }
     }
     // Remove JavaScript interface when the activity is destroyed

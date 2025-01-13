@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Iterate over each path element
   paths.forEach((path) => {
+    // Add click event listener to change the color
     path.addEventListener("click", (event) => {
       // Reset the style of the previously clicked path (if any)
       if (previouslyClickedPath) {
@@ -17,9 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Get the ID of the clicked path
       const pathId = event.target.id;
-      event.target.style.fill = "red";
-      event.target.style.stroke = "black"; // Set stroke (border) to black
-      event.target.style.strokeWidth = "1"; // Set stroke width
+      event.target.style.fill = "#FF6347";
       console.log(`Clicked path with ID: ${pathId}`);
 
       // Use the pathId to find the corresponding circle element
@@ -34,6 +33,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Update the previously clicked path
       previouslyClickedPath = event.target;
+    });
+
+    // Add double-click event listener to rollback the color change
+    path.addEventListener("dblclick", (event) => {
+      event.target.style.fill = ""; // Reset fill color
+      event.target.style.stroke = ""; // Reset stroke color
+      event.target.style.strokeWidth = ""; // Reset stroke width
+      console.log(`Double-clicked path with ID: ${event.target.id}, color reset`);
     });
   });
 });

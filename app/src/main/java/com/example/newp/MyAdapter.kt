@@ -6,10 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.compose.ui.text.toUpperCase
 import androidx.recyclerview.widget.RecyclerView
 
 
 class MyAdapter(private var items: MutableList<CardItem>) :
+
     RecyclerView.Adapter<MyAdapter.CardViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CardViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.viewtype, parent, false)
@@ -31,13 +33,15 @@ class MyAdapter(private var items: MutableList<CardItem>) :
         return items.size
     }
 
-    fun updateData(newItems:WeatherResponse?){
+    fun updateData(newItems:WeatherResponse?,state : String){
         newItems?.let { item ->
             items.clear()
             Log.d("Adap", "updateData: ${item.name}")
+            items.add(CardItem("State",state))
             items.add(CardItem("City", item.name))
             items.add(CardItem("Temperature", "${item.main.tempInCelsius(item.main.temp)}°C"))
             items.add(CardItem("Feels Like", "${item.main.tempInCelsius(item.main.feels_like)}°C"))
+            items.add(CardItem("Description", item.weather[0].description.toUpperCase()))
             items.add(CardItem("Humidity", "${item.main.humidity}%"))
             items.add(CardItem("Pressure", "${item.main.pressure} hPa"))
             items.add(CardItem("Wind Speed", "${item.wind.speed} m/s"))
