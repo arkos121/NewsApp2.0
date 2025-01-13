@@ -36,9 +36,15 @@ class MyAdapter(private var items: MutableList<CardItem>) :
             items.clear()
             Log.d("Adap", "updateData: ${item.name}")
             items.add(CardItem("City", item.name))
-            items.add(CardItem("Temperature", "${item.main.tempInCelsius()}°C"))
+            items.add(CardItem("Temperature", "${item.main.tempInCelsius(item.main.temp)}°C"))
+            items.add(CardItem("Feels Like", "${item.main.tempInCelsius(item.main.feels_like)}°C"))
             items.add(CardItem("Humidity", "${item.main.humidity}%"))
+            items.add(CardItem("Pressure", "${item.main.pressure} hPa"))
             items.add(CardItem("Wind Speed", "${item.wind.speed} m/s"))
+            items.add(CardItem("Wind Direction", "${item.wind.deg}°"))
+            // Add more weather data if needed
+            items.add(CardItem("Max Temp", "${item.main.tempInCelsius(item.main.temp_max)}°C"))
+            items.add(CardItem("Min Temp", "${item.main.tempInCelsius(item.main.temp_min)}°C"))
             notifyDataSetChanged()
         }
     }
