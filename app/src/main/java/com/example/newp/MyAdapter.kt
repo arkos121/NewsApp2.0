@@ -31,11 +31,6 @@ class MyAdapter(private var items: MutableList<CardItem>) :
         return items.size
     }
 
-//    fun updateData(newItems: List<CardItem>) {
-//        items.clear()
-//        items.addAll(newItems)
-//        notifyDataSetChanged()
-//    }
     fun updateData(newItems:WeatherResponse?){
         newItems?.let { item ->
             items.clear()

@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -31,7 +33,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         auth = FirebaseAuth.getInstance()
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -45,9 +46,21 @@ class MainActivity : AppCompatActivity() {
         logout = binding.logouts
         Log.d("MainActivity", "onCreate: Activity started")  // Log onCreate
         click()
+        var fl = true
+        binding.cardView.visibility = View.GONE
         binding.checks.setOnClickListener {
-            fetchDelhiNews()
+            if(binding.cardView.visibility == View.GONE) {
+                if(fl == true) {
+                    fetchDelhiNews()
+                }
+                fl = false
+                binding.cardView.visibility = View.VISIBLE
+            }
+            else{
+                binding.cardView.visibility = View.GONE
+            }
         }
+
         logout.setOnClickListener {
             auth.signOut()
             val intent = Intent(this, SplashScreen::class.java)
@@ -140,13 +153,6 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
-
-    // Function to update the UI with the fetched weather data
-//    private fun showWeatherData(weatherData: WeatherResponse, stateUpdateCallBack: String) {
-//        Log.d("MainActivity", "showWeatherData: Showing weather data - Temp: {${weatherData.main.tempInCelsius()}}")  // Log weather data
-//        Toast.makeText(this, "Temperature is ${weatherData.main.tempInCelsius()}°C for ${getCapital(stateUpdateCallBack)}", Toast.LENGTH_LONG).show()
-//    }
-
      fun fetchDelhiNews() {
         // Initialize Chaquopy (only once)
         if (!Python.isStarted()) {
@@ -155,26 +161,18 @@ class MainActivity : AppCompatActivity() {
 
         // Get the Python instance
         val python = Python.getInstance()
-
-        // Get the Python module (the script file without '.py' extension)
         val pyObj = python.getModule("import_req")  // Reference the Python script (without '.py')
-
-        // Call the 'scrape_delhi_news' function from the Python script
         val result = pyObj.callAttr("scrape_delhi_news") // Call the function
-
-        // Check if the result is not empty and handle it
          if (result != null) {
-             // Iterate through the Python list directly (no conversion to List<String>)
              for (i in 0 until result.asList().size) {
+                 val newsItem = result.asList()[i]// Get the news item
+                 binding.datas.append("$i: $newsItem\n\n")
                  Log.d("DelhiNews", result.asList()[i].toString()) // Log the news item
              }
         } else {
             Log.d("DelhiNews", "No news found or error occurred.")
         }
-
 }
-
-
     // WebAppInterface to handle JS interface calls
     private class WebAppInterface(
         private val context: Context,
@@ -195,6 +193,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    inner class DoubleTabListener : GestureDetector.SimpleOnGestureListener(){
+        override fun onDoubleTap(e: MotionEvent): Boolean {
+            binding.cardView.visibility = View.GONE
+            return true
+        }
+    }
 
 
     // Remove JavaScript interface when the activity is destroyed
