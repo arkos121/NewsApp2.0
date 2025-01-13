@@ -84,6 +84,7 @@ class MainActivity : AppCompatActivity() {
             Log.d("MainActivity", "State clicked: $state")
             state?.let {
                 lastclicked = it
+                binding.textviews.text = "${lastclicked} News"
                 // Reset news loaded flag when new state is clicked
                 isNewsLoaded = false
                 // If card is visible, update news immediately
