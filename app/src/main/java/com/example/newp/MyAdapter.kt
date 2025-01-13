@@ -33,12 +33,14 @@ class MyAdapter(private var items: MutableList<CardItem>) :
         return items.size
     }
 
-    fun updateData(newItems:WeatherResponse?,state : String){
+    fun updateData(newItems:WeatherResponse?,state : String,petrol : String?,diesel: String?){
         newItems?.let { item ->
             items.clear()
             Log.d("Adap", "updateData: ${item.name}")
             items.add(CardItem("State",state))
             items.add(CardItem("City", item.name))
+            items.add(CardItem("Petrol Price",petrol?:""))
+            items.add(CardItem("Diesel Price",diesel?:""))
             items.add(CardItem("Temperature", "${item.main.tempInCelsius(item.main.temp)}°C"))
             items.add(CardItem("Feels Like", "${item.main.tempInCelsius(item.main.feels_like)}°C"))
             items.add(CardItem("Description", item.weather[0].description.toUpperCase()))

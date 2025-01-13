@@ -21,10 +21,10 @@ import com.example.newp.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.google.firebase.auth.FirebaseAuth
-
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -99,10 +99,14 @@ class MainActivity : AppCompatActivity() {
                 CoroutineScope(Dispatchers.Main).launch {
                     try {
                         var weatherData: WeatherResponse? = null
+                        var diesel : String ?= null
+                        var petrol : String? = null
                         withContext(Dispatchers.IO) {
                             weatherData = makeApiCall(it)
+                            petrol = fuelprice(it).first
+                            diesel = fuelprice(it).second
                         }
-                        adapter.updateData(weatherData,it)
+                        adapter.updateData(weatherData,it,petrol,diesel)
                     } catch (e: Exception) {
                         Log.e("MainActivity", "Error in API call: ${e}")
                     }
@@ -110,9 +114,7 @@ class MainActivity : AppCompatActivity() {
             }
         }, "Android")
     }
-
-
-    // Make the API call for weather data
+    // Make the API call for weather ata
     private suspend fun makeApiCall(state: String): WeatherResponse {
         Log.d(
             "MainActivity",
@@ -138,6 +140,41 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
+    fun fuelprice(state: String): Pair<String,String> {
+        // Initialize Python instance
+        val python = Python.getInstance()
+
+        try {
+            // Call the Python function to fetch the petrol price for the given state
+            val pythonScript = python.getModule("petrol") // The Python file name without the .py extension
+            val result: PyObject = pythonScript.callAttr("fetch_fuel_prices_by_state", state)
+            val k = result.asList()
+
+            // Assuming the result contains two elements (petrol and diesel prices)
+            if (k.size >= 2) {
+                val petrolPrice = k[0].toString() // First element is petrol price
+                val dieselPrice = k[1].toString() // Second element is diesel price
+
+                return Pair(petrolPrice,dieselPrice)
+                Log.d("Fuel Prices", "Petrol: $petrolPrice, Diesel: $dieselPrice for $state")
+            } else {
+                Log.d("Fuel Prices", "Invalid result or missing prices for $state")
+            }
+
+            // Check if the result is valid and log the price
+//            if (petrolp != "None" && diselp != "None") {
+//                Log.d("Fuel Prices", "Petrol: $petrolp, Diesel: $diselp for $state")
+//            } else {
+//                Log.d("Fuel Prices", "No data found for $state")
+//            }
+        } catch (e: Exception) {
+            Log.e("Error", "Error fetching data: ${e.message}")
+        }
+
+        // Return the price (or empty string if no price found)
+        return Pair("","")
+    }
+
     fun fetchStateNews(state: String ) {
         // Cancel any existing coroutine job
         newsJob?.cancel()
@@ -197,9 +234,7 @@ class MainActivity : AppCompatActivity() {
             Log.e("StateNews", "Initialization error for $state", e)
         }
     }
-
     // Add this property at class leve
-
     // WebAppInterface to handle JS interface calls
     private class WebAppInterface(
         private val context: Context,
