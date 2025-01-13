@@ -140,22 +140,17 @@ class MainActivity : AppCompatActivity() {
     }
     fun fetchStateNews(state: String ) {
         // Cancel any existing coroutine job
-
         newsJob?.cancel()
-
         try {
             // Initialize Chaquopy if not already initialized
             if (!Python.isStarted()) {
                 Python.start(AndroidPlatform(this))
             }
-
             // Get Python instance and module
             val python = Python.getInstance()
             val pyObj = python.getModule("import_req")
-
             // Clear previous content and show loading
             binding.datas.text = "Loading news for $state..."
-
             // Start new coroutine job
             newsJob = CoroutineScope(Dispatchers.IO + Job()).launch {
                 try {
