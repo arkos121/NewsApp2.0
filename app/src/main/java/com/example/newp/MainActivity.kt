@@ -31,6 +31,10 @@ class MainActivity : AppCompatActivity() {
     private val items: MutableList<CardItem> = mutableListOf()
     lateinit var logout: Button
     private lateinit var auth: FirebaseAuth
+    private var lastclicked : String ?=""
+    private var newsJob : Job ?= null
+    private var isNewsLoaded = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -46,20 +50,7 @@ class MainActivity : AppCompatActivity() {
         logout = binding.logouts
         Log.d("MainActivity", "onCreate: Activity started")  // Log onCreate
         click()
-        var fl = true
-        binding.cardView.visibility = View.GONE
-        binding.checks.setOnClickListener {
-            if(binding.cardView.visibility == View.GONE) {
-                if(fl == true) {
-                    fetchDelhiNews()
-                }
-                fl = false
-                binding.cardView.visibility = View.VISIBLE
-            }
-            else{
-                binding.cardView.visibility = View.GONE
-            }
-        }
+        cardviews()
 
         logout.setOnClickListener {
             auth.signOut()
@@ -68,64 +59,53 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
+    private fun cardviews() {
+        binding.cardView.visibility = View.GONE
 
-
-    fun additemsto(weatherData: WeatherResponse) {
-        Log.d("MainActivity", "additemsto: Updating RecyclerView with weather data temp:${weatherData.main.tempInCelsius()}°C")
-
-        // Clear and update the global items list
-        val list :MutableList<CardItem> = mutableListOf()
-        list.add(
-                CardItem("State", getCapital(weatherData.name)),
-        )
-        Log.d("TAG", "additemsto: ${list.size}")
-        list.add(CardItem("Temperature", "${weatherData.main.tempInCelsius()}°C"))
-        Log.d("MainActivity", "additemsto: Items added: $list")
+        binding.checks.setOnClickListener {
+            if (binding.cardView.visibility == View.GONE) {
+                binding.cardView.visibility = View.VISIBLE
+                // Only fetch if we have a valid state
+                if (lastclicked?.isNotEmpty() == true) {
+                    fetchStateNews(lastclicked?:"")
+                }
+            } else {
+                binding.cardView.visibility = View.GONE
+            }
+        }
     }
-
-
     private fun click() {
         val webView: WebView = binding.webView
         webView.settings.javaScriptEnabled = true
         webView.webViewClient = WebViewClient()
         webView.loadUrl("file:///android_asset/indianmap.html")
-        Log.d("MainActivity", "click: WebView loaded with Indian map")  // Log webView load
 
         webView.addJavascriptInterface(WebAppInterface(this) { state ->
-            Log.d("MainActivity", "click: State clicked: $state")  // Log state clicked
+            Log.d("MainActivity", "State clicked: $state")
             state?.let {
-                println("The city is: ${getCapital(it)}")
-                // Call makeApiCall inside a coroutine
+                lastclicked = it
+                // Reset news loaded flag when new state is clicked
+                isNewsLoaded = false
+                // If card is visible, update news immediately
+                if (binding.cardView.visibility == View.VISIBLE) {
+                    fetchStateNews(lastclicked?:"")
+                }
+                // Call weather API
                 CoroutineScope(Dispatchers.Main).launch {
                     try {
-                        Log.d(
-                            "MainActivity",
-                            "makeApiCall: Calling API for $it"
-                        )  // Log before API call
-
-                        // Update the UI on the main thread
                         var weatherData: WeatherResponse? = null
                         withContext(Dispatchers.IO) {
                             weatherData = makeApiCall(it)
-                            Log.d(
-                                "MainActivity",
-                                "makeApiCall: API call successful $weatherData"
-                            )  // Log after API call
                         }
-                        CoroutineScope(Dispatchers.Main).launch {
-                            adapter.updateData(weatherData)
-                        }
-
+                        adapter.updateData(weatherData)
                     } catch (e: Exception) {
-                        Log.e(
-                            "MainActivity",
-                            "Error in API call: ${e}"
-                        )  // Log error in API call
+                        Log.e("MainActivity", "Error in API call: ${e}")
                     }
                 }
             }
         }, "Android")
     }
+
 
     // Make the API call for weather data
     private suspend fun makeApiCall(state: String): WeatherResponse {
@@ -153,26 +133,73 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
-     fun fetchDelhiNews() {
-        // Initialize Chaquopy (only once)
-        if (!Python.isStarted()) {
-            Python.start(AndroidPlatform(this))
-        }
+    fun fetchStateNews(state: String ) {
+        // Cancel any existing coroutine job
 
-        // Get the Python instance
-        val python = Python.getInstance()
-        val pyObj = python.getModule("import_req")  // Reference the Python script (without '.py')
-        val result = pyObj.callAttr("scrape_delhi_news") // Call the function
-         if (result != null) {
-             for (i in 0 until result.asList().size) {
-                 val newsItem = result.asList()[i]// Get the news item
-                 binding.datas.append("$i: $newsItem\n\n")
-                 Log.d("DelhiNews", result.asList()[i].toString()) // Log the news item
-             }
-        } else {
-            Log.d("DelhiNews", "No news found or error occurred.")
+        newsJob?.cancel()
+
+        try {
+            // Initialize Chaquopy if not already initialized
+            if (!Python.isStarted()) {
+                Python.start(AndroidPlatform(this))
+            }
+
+            // Get Python instance and module
+            val python = Python.getInstance()
+            val pyObj = python.getModule("import_req")
+
+            // Clear previous content and show loading
+            binding.datas.text = "Loading news for $state..."
+
+            // Start new coroutine job
+            newsJob = CoroutineScope(Dispatchers.IO + Job()).launch {
+                try {
+                    // Call Python function
+                    val result = pyObj.callAttr("get_news_for_state", state)
+
+                    // Switch to main thread for UI updates
+                    withContext(Dispatchers.Main) {
+                        if (result != null) {
+                            // Clear previous content
+                            binding.datas.text = ""
+
+                            val newsList = result.asList()
+                            if (newsList.isNotEmpty()) {
+                                // Add header with state name
+                                binding.datas.append("Latest News for $state:\n\n")
+
+                                // Display each news item
+                                for (i in newsList.indices) {
+                                    val newsItem = newsList[i].toString()
+                                    if (newsItem.isNotBlank()) {
+                                        binding.datas.append("${i + 1}. $newsItem\n\n")
+                                        Log.d("StateNews", "News $i for $state: $newsItem")
+                                    }
+                                }
+                            } else {
+                                binding.datas.text = "No news found for $state"
+                                Log.d("StateNews", "No news found for $state")
+                            }
+                        } else {
+                            binding.datas.text = "Unable to fetch news for $state"
+                            Log.e("StateNews", "Python result was null for $state")
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        binding.datas.text = "Error fetching news for $state: ${e.localizedMessage}"
+                        Log.e("StateNews", "Error fetching news for $state", e)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            binding.datas.text = "Failed to initialize news fetcher for $state: ${e.localizedMessage}"
+            Log.e("StateNews", "Initialization error for $state", e)
         }
-}
+    }
+
+    // Add this property at class leve
+
     // WebAppInterface to handle JS interface calls
     private class WebAppInterface(
         private val context: Context,
@@ -192,17 +219,9 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(context, "Clicked State is $state", Toast.LENGTH_SHORT).show()
         }
     }
-
-    inner class DoubleTabListener : GestureDetector.SimpleOnGestureListener(){
-        override fun onDoubleTap(e: MotionEvent): Boolean {
-            binding.cardView.visibility = View.GONE
-            return true
-        }
-    }
-
-
     // Remove JavaScript interface when the activity is destroyed
     override fun onDestroy() {
+        newsJob?.cancel()
         val webView: WebView = findViewById(R.id.webView)
         webView.removeJavascriptInterface("Android")
         Log.d(
