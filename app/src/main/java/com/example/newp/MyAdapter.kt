@@ -5,9 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.cardview.widget.CardView
-import androidx.compose.ui.text.toUpperCase
 import androidx.recyclerview.widget.RecyclerView
+import com.example.newp.apis.WeatherResponse
 
 
 class MyAdapter(private var items: MutableList<CardItem>) :
@@ -33,7 +32,7 @@ class MyAdapter(private var items: MutableList<CardItem>) :
         return items.size
     }
 
-    fun updateData(newItems:WeatherResponse?,state : String,petrol : String?,diesel: String?){
+    fun updateData(newItems: WeatherResponse?, state : String, petrol : String?, diesel: String?){
         newItems?.let { item ->
             items.clear()
             Log.d("Adap", "updateData: ${item.name}")

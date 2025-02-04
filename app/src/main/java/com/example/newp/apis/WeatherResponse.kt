@@ -1,4 +1,4 @@
-package com.example.newp
+package com.example.newp.apis
 
 data class WeatherResponse(
     val weather: List<WeatherDetail>,

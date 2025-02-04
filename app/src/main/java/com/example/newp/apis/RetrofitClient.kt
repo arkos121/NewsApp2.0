@@ -1,8 +1,8 @@
-package com.example.newp
+package com.example.newp.apis
 
+import com.example.newp.OpenWeatherMapConfig
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 
 object RetrofitClient {
     private val retrofit = Retrofit.Builder()

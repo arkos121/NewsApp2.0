@@ -1,5 +1,6 @@
-package com.example.newp
+package com.example.newp.apis
 
+import com.example.newp.OpenWeatherMapConfig
 import retrofit2.http.GET
 import retrofit2.http.Query
 

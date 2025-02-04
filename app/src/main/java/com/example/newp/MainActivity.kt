@@ -1,20 +1,15 @@
 package com.example.newp
 
-import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.GestureDetector
-import android.view.MotionEvent
 import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
-import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.example.newp.databinding.ActivityMainBinding
@@ -24,6 +19,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chaquo.python.PyObject
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
+import com.example.newp.apis.RetrofitClient
+import com.example.newp.apis.WeatherResponse
+import com.example.newp.db.NewsDb
+import com.example.newp.utils.convertMillisToTimeInIST
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
@@ -34,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var logout: Button
     private lateinit var auth: FirebaseAuth
     var lastclicked : String ?=""
+    private var newsJobs : Job ?=null
     private var newsJob : Job ?= null
     private var isNewsLoaded = false
 
@@ -175,65 +175,87 @@ class MainActivity : AppCompatActivity() {
         return Pair("","")
     }
 
-    fun fetchStateNews(state: String ) {
-        // Cancel any existing coroutine job
-        newsJob?.cancel()
+private var timestamp : Long = System.currentTimeMillis()
+fun fetchStateNews(state: String) {
+    val newsDao = NewsDb.getDatabase(this).newsDao()
+    timestamp = System.currentTimeMillis()
+    val expiry = timestamp - (12 * 60 * 60 * 1000)  // 24 hours in milliseconds
+
+    // Cancel any existing coroutine job
+    newsJob?.cancel()
+
+    CoroutineScope(Dispatchers.IO + Job()).launch {
         try {
-            // Initialize Chaquopy if not already initialized
-            if (!Python.isStarted()) {
-                Python.start(AndroidPlatform(this))
-            }
-            // Get Python instance and module
-            val python = Python.getInstance()
-            val pyObj = python.getModule("import_req")
-            // Clear previous content and show loading
-            binding.datas.text = "Loading news for $state..."
-            // Start new coroutine job
-            newsJob = CoroutineScope(Dispatchers.IO + Job()).launch {
-                try {
-                    // Call Python function
-                    val result = pyObj.callAttr("get_news_for_state", state)
+            // Check if cached news exists for the given state
+            val cachedNews = newsDao.getNews(state)
+            // If cached news exists, display it
+            if (cachedNews.isNotEmpty()) {
+                withContext(Dispatchers.Main) {
+                    binding.datas.text = "Latest News for $state: Last updated on :${convertMillisToTimeInIST(newsDao.gettimestamp(state))}\n\n"
 
-                    // Switch to main thread for UI updates
-                    withContext(Dispatchers.Main) {
-                        if (result != null) {
-                            // Clear previous content
-                            binding.datas.text = ""
-
-                            val newsList = result.asList()
-                            if (newsList.isNotEmpty()) {
-                                // Add header with state name
-                                binding.datas.append("Latest News for $state:\n\n")
-
-                                // Display each news item
-                                for (i in newsList.indices) {
-                                    val newsItem = newsList[i].toString()
-                                    if (newsItem.isNotBlank()) {
-                                        binding.datas.append("${i + 1}. $newsItem\n\n")
-                                        Log.d("StateNews", "News $i for $state: $newsItem")
-                                    }
-                                }
-                            } else {
-                                binding.datas.text = "No news found for $state"
-                                Log.d("StateNews", "No news found for $state")
-                            }
-                        } else {
-                            binding.datas.text = "Unable to fetch news for $state"
-                            Log.e("StateNews", "Python result was null for $state")
+                    cachedNews.forEachIndexed { index, newsItem ->
+                        if (newsItem.description.isNotBlank()) {
+                            binding.datas.append("${index + 1}. ${newsItem.description}\n\n")
+                            Log.d("StateNews", "Cached News $index for $state: ${newsItem.description}")
                         }
                     }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        binding.datas.text = "Error fetching news for $state: ${e.localizedMessage}"
-                        Log.e("StateNews", "Error fetching news for $state", e)
+                }
+            } else {
+                // If no cached news, proceed to fetch fresh data from Python script
+                withContext(Dispatchers.Main) {
+                    binding.datas.text = "Loading news for $state..."
+                }
+
+                // Initialize Chaquopy if not already initialized
+                if (!Python.isStarted()) {
+                    Python.start(AndroidPlatform(this@MainActivity))
+                }
+
+                // Get Python instance and module
+                val python = Python.getInstance()
+                val pyObj = python.getModule("import_req")
+
+                // Call Python function to fetch fresh news
+                val result = pyObj.callAttr("get_news_for_state", state)
+
+                // Switch to main thread for UI updates
+                withContext(Dispatchers.Main) {
+                    if (result != null) {
+                        binding.datas.text = ""
+
+                        val newsList = result.asList()
+                        if (newsList.isNotEmpty()) {
+                            binding.datas.append("Latest News for $state:\n\n")
+
+                            // Display each news item and save it to the database
+                            newsList.forEachIndexed { index, newsItem ->
+                                val newsText = newsItem.toString()
+                                if (newsText.isNotBlank()) {
+                                    binding.datas.append("${index + 1}. $newsText\n\n")
+                                    newsDao.insert(com.example.newp.db.Data(state = state, description = newsText, timestamp = timestamp))
+                                    Log.d("StateNews", "News $index for $state: $newsText")
+                                }
+                            }
+                        } else {
+                            binding.datas.text = "No news found for $state"
+                            Log.d("StateNews", "No news found for $state")
+                        }
                     }
                 }
             }
+            // Clean up expired news from the database
+            newsDao.delNews(expiry)
+
         } catch (e: Exception) {
-            binding.datas.text = "Failed to initialize news fetcher for $state: ${e.localizedMessage}"
-            Log.e("StateNews", "Initialization error for $state", e)
+            withContext(Dispatchers.Main) {
+                binding.datas.text = "Error fetching news for $state: ${e.localizedMessage}"
+                Log.e("StateNews", "Error fetching news for $state", e)
+            }
         }
     }
+}
+
+
     // Add this property at class leve
     // WebAppInterface to handle JS interface calls
     private class WebAppInterface(

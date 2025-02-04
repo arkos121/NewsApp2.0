@@ -4,6 +4,10 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     id("com.chaquo.python")
+    id("com.google.devtools.ksp")
+
+// Add this if missing
+
 }
 
 android {
@@ -91,7 +95,11 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-auth:22.1.1") // Example version
+    implementation("androidx.room:room-runtime:2.5.2")
+    ksp("androidx.room:room-compiler:2.5.2")
 
+    // If you want to use Kotlin extensions, include this:
+    implementation("androidx.room:room-ktx:2.5.2")
 
     // Add the dependencies for the Crashlytics and Analytics libraries
     // When using the BoM, you don't specify versions in Firebase library dependencies
