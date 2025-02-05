@@ -9,5 +9,8 @@ data class Data(
 @PrimaryKey(autoGenerate = true)val id : Int = 0,
 val state :String,
     val description : String,
-    var timestamp: Long = System.currentTimeMillis()
+    var timestamp: Long = System.currentTimeMillis(),
+    val petrolPrice : String,
+    val dieselPrice : String
+
 )

@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.example.newp.db.DaoClass
 import com.example.newp.db.Data
 
-@Database(entities = [Data::class], version = 1, exportSchema = false)
+@Database(entities = [Data::class], version = 2, exportSchema = false)
 abstract class NewsDb : RoomDatabase() {
     abstract fun newsDao(): DaoClass
 

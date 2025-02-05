@@ -20,6 +20,12 @@ interface DaoClass{
     @Query("SELECT timestamp from News where state = :state")
     suspend fun gettimestamp(state: String): Long
 
+    @Query("SELECT petrolPrice from News where state = :state")
+    suspend fun getpetrolprice(state: String): String
+
+    @Query("SELECT dieselPrice from News where state = :state")
+    suspend fun getdieselprice(state: String) : String
+
 
 
 }

@@ -32,6 +32,7 @@
                     android:layout_height="50dp"
                     android:layout_marginStart="16dp"
                     android:padding="8dp"
+                    android:clickable="true"
                     android:src="@drawable/w2"
                     android:contentDescription="User profile image"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -139,6 +140,7 @@
     <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclelayout"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"

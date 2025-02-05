@@ -18,17 +18,16 @@
         <!-- Add your data views here -->
         <TextView
             android:id="@+id/titleTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_width="0dp"
+            android:layout_height="23dp"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
             android:text=""
             android:textSize="18sp"
             android:textStyle="bold"
-
-            app:layout_constraintStart_toStartOf="@id/cardView"
+            app:layout_constraintLeft_toLeftOf="@id/cardView"
             app:layout_constraintTop_toTopOf="@id/cardView" />
+
+          />
 
         <TextView
             android:id="@+id/descriptionTextView"

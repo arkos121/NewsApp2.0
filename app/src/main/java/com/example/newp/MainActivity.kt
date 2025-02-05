@@ -22,6 +22,7 @@ import com.chaquo.python.android.AndroidPlatform
 import com.example.newp.apis.RetrofitClient
 import com.example.newp.apis.WeatherResponse
 import com.example.newp.db.NewsDb
+import com.example.newp.utils.WeatherCache
 import com.example.newp.utils.convertMillisToTimeInIST
 import com.google.firebase.auth.FirebaseAuth
 
@@ -33,23 +34,22 @@ class MainActivity : AppCompatActivity() {
     lateinit var logout: Button
     private lateinit var auth: FirebaseAuth
     var lastclicked : String ?=""
-    private var newsJobs : Job ?=null
     private var newsJob : Job ?= null
+    private var weatherJob : Job ?= null
     private var isNewsLoaded = false
+
 
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        if (!Python.isStarted()) {
+            Python.start(AndroidPlatform(this@MainActivity))
+        }
         auth = FirebaseAuth.getInstance()
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-        val recyclerView: RecyclerView = binding.recyclelayout
-        adapter = MyAdapter(items)
-        recyclerView.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        recyclerView.adapter = adapter
+        setupRecyclerView()
         logout = binding.logouts
         Log.d("MainActivity", "onCreate: Activity started")  // Log onCreate
         click()
@@ -62,6 +62,16 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
+
+    private fun setupRecyclerView() {
+        val recyclerView: RecyclerView = binding.recyclelayout
+//        items = mutableListOf()
+        adapter = MyAdapter(items)
+        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        recyclerView.adapter = adapter
+    }
+
+
     private fun cardviews() {
         binding.cardView.visibility = View.GONE
 
@@ -86,7 +96,7 @@ class MainActivity : AppCompatActivity() {
 
         webView.addJavascriptInterface(WebAppInterface(this) { state ->
             Log.d("MainActivity", "State clicked: $state")
-            state?.let {
+            state?.let { it->
                 lastclicked = it
                 binding.textviews.text = "${lastclicked} News"
                 // Reset news loaded flag when new state is clicked
@@ -96,32 +106,45 @@ class MainActivity : AppCompatActivity() {
                     fetchStateNews(lastclicked?:"")
                 }
                 // Call weather API
-                CoroutineScope(Dispatchers.Main).launch {
+                weatherJob?.cancel()
+                weatherJob = CoroutineScope(Dispatchers.IO).launch {
                     try {
                         var weatherData: WeatherResponse? = null
-                        var diesel : String ?= null
-                        var petrol : String? = null
-                        withContext(Dispatchers.IO) {
-                            weatherData = makeApiCall(it)
-                            petrol = fuelprice(it).first
-                            diesel = fuelprice(it).second
-                        }
-                        adapter.updateData(weatherData,it,petrol,diesel)
+                        var diesel: String
+                        var petrol: String
+
+                        weatherData = makeApiCall(it)
+                        var k = fuelprice(it)
+                        diesel = k.second
+                        petrol = k.first
+
+                        withContext(Dispatchers.Main) {
+                        adapter.updateData(weatherData, it, petrol, diesel)
+                            Log.d("hey","updating data")
+                        binding.recyclelayout.visibility = View.VISIBLE
+                            Log.d("hey","making it visible")
+                    }
                     } catch (e: Exception) {
-                        Log.e("MainActivity", "Error in API call: ${e}")
+                        Log.e("Lol", "Error in API call: ${e}")
                     }
                 }
             }
         }, "Android")
     }
     // Make the API call for weather ata
+
     private suspend fun makeApiCall(state: String): WeatherResponse {
+        WeatherCache.get(state)?.let {
+            Log.d("make call","the cache data is present and shown")
+            return it
+        }
         Log.d(
             "MainActivity",
             "makeApiCall: Making API call for state $state"
         )  // Log API call attempt
         return try {
             val weatherResponse = weatherService.getWeatherByCity(getCapital(state))
+            WeatherCache.put(state,weatherResponse)
             Log.d(
                 "WeatherResponse",
                 "makeApiCall: Response received: $weatherResponse"
@@ -154,19 +177,11 @@ class MainActivity : AppCompatActivity() {
             if (k.size >= 2) {
                 val petrolPrice = k[0].toString() // First element is petrol price
                 val dieselPrice = k[1].toString() // Second element is diesel price
-
                 return Pair(petrolPrice,dieselPrice)
                 Log.d("Fuel Prices", "Petrol: $petrolPrice, Diesel: $dieselPrice for $state")
             } else {
                 Log.d("Fuel Prices", "Invalid result or missing prices for $state")
             }
-
-            // Check if the result is valid and log the price
-//            if (petrolp != "None" && diselp != "None") {
-//                Log.d("Fuel Prices", "Petrol: $petrolp, Diesel: $diselp for $state")
-//            } else {
-//                Log.d("Fuel Prices", "No data found for $state")
-//            }
         } catch (e: Exception) {
             Log.e("Error", "Error fetching data: ${e.message}")
         }
@@ -192,7 +207,6 @@ fun fetchStateNews(state: String) {
             if (cachedNews.isNotEmpty()) {
                 withContext(Dispatchers.Main) {
                     binding.datas.text = "Latest News for $state: Last updated on :${convertMillisToTimeInIST(newsDao.gettimestamp(state))}\n\n"
-
                     cachedNews.forEachIndexed { index, newsItem ->
                         if (newsItem.description.isNotBlank()) {
                             binding.datas.append("${index + 1}. ${newsItem.description}\n\n")
@@ -207,9 +221,7 @@ fun fetchStateNews(state: String) {
                 }
 
                 // Initialize Chaquopy if not already initialized
-                if (!Python.isStarted()) {
-                    Python.start(AndroidPlatform(this@MainActivity))
-                }
+
 
                 // Get Python instance and module
                 val python = Python.getInstance()
@@ -232,7 +244,8 @@ fun fetchStateNews(state: String) {
                                 val newsText = newsItem.toString()
                                 if (newsText.isNotBlank()) {
                                     binding.datas.append("${index + 1}. $newsText\n\n")
-                                    newsDao.insert(com.example.newp.db.Data(state = state, description = newsText, timestamp = timestamp))
+                                    newsDao.insert(com.example.newp.db.Data(state = state, description = newsText, timestamp = timestamp,
+                                        petrolPrice = fuelprice(state).first, dieselPrice = fuelprice(state).second))
                                     Log.d("StateNews", "News $index for $state: $newsText")
                                 }
                             }
