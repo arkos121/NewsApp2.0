@@ -56,8 +56,6 @@ An Android application that offers a unique and engaging way to explore state-wi
 
 ## 📸 Screenshots (To Add)
 
-> _Coming soon..._
-> Add app screenshots here to visually show the interactive map, news feed, and weather display.
 
 ## 🧠 Why I Built This
 
